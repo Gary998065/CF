@@ -1,5 +1,5 @@
 // unicom-free.js (测试版)
-// Shadowrocket 用于统计 tjupload.pan.wo.cn 免流量，测试推送
+// Shadowrocket 用于统计 tjupload.pan.wo.cn 免流量，每次访问立即推送通知
 
 const key = "unicom_free_today";
 const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
@@ -11,22 +11,22 @@ if (store.date !== today) {
     store = { date: today, used: 0 };
 }
 
-// 如果是 HTTP 请求触发
+// 统计流量
+let size = 0;
 if ($request) {
-    let size = 0;
-    if ($request.body) size = $request.body.length; // 请求体大小
-    size += parseInt($request.headers["Content-Length"] || 0); // 请求头声明大小
+    if ($request.body) size += $request.body.length;
+    size += parseInt($request.headers["Content-Length"] || 0);
     store.used += size;
     $persistentStore.write(JSON.stringify(store), key);
+
+    // 推送通知（每次访问立即触发）
+    let usedMB = (store.used / 1024 / 1024).toFixed(2);
+    $notify("联通免流统计", "实时推送", `今日累计免流 ${usedMB} MB`);
     $done({});
 }
 
-// 如果是定时任务触发 (cron)
+// 如果是 cron 触发，只累加数据，不推送
 if ($trigger == "cron") {
-    let usedMB = (store.used / 1024 / 1024).toFixed(2);
-    $notify("联通免流统计", "测试推送", `今日已免流 ${usedMB} MB`);
+    $persistentStore.write(JSON.stringify(store), key);
     $done();
 }
-
-$notify("联通免流测试", "立即推送", "测试成功");
-$done();
