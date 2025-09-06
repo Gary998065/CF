@@ -27,3 +27,6 @@ if ($trigger == "cron") {
     $notify("联通免流统计", "测试推送", `今日已免流 ${usedMB} MB`);
     $done();
 }
+
+$notify("联通免流测试", "立即推送", "测试成功");
+$done();
